@@ -4,6 +4,7 @@ from datetime import datetime
 import csv
 from matplotlib import pyplot as plt
 import std
+from sys import argv
 
 
 def get_data(file):
@@ -52,7 +53,7 @@ def plot_data(file):
 
 
 def main():
-    plot_data("./gurken.csv")
+    plot_data(argv[1])
     return
 
 
