@@ -17,12 +17,14 @@ def get_data(file):
             dates.append(row["date"])
             prices.append(row["price"].strip())
 
+    prices = list(map(float,prices))
     # date parser
     #all_dates = {}
     ref_date = datetime(2025,12,1)
     diff_dates = []
     # assumes DD-MM-YYYY format for date input (possible separators: -, / or .)
     for x in range(len(dates)):
+
         if "-" in dates[x]:
             day,month,year = dates[x].split("-")
         elif "/" in dates[x]:
