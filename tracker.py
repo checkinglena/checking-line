@@ -7,21 +7,20 @@ import std
 
 
 def get_data(file):
-    #converters = {0: lambda x: dates.datestr2num(str(x))}
-    #day = datetime.strptime("01-01-2003", "%d-%m-%Y").strftime("%m-%d-%Y")
-
     with open(file) as file:
         f = csv.DictReader(file, delimiter=";")
         dates = []
         prices = []
+        # assumes header row "date;price"
         for row in f:
             dates.append(row["date"])
-            prices.append(row[" price"].strip())
+            prices.append(row["price"].strip())
 
     # date parser
     #all_dates = {}
     ref_date = datetime(2025,12,1)
     diff_dates = []
+    # assumes DD-MM-YYYY format for date input (possible separators: -, / or .)
     for x in range(len(dates)):
         if "-" in dates[x]:
             day,month,year = dates[x].split("-")
@@ -34,34 +33,19 @@ def get_data(file):
         #dict_date = {"day":int(day),"month":int(month),"year":int(year)}
         #all_dates.update({x: dict_date})
         instance_date = datetime(int(year),int(month),int(day))
+        #convert date to number of days passed since reference date
         diff = instance_date - ref_date
         diff_dates.append(diff)
 
     diff_days = ([x.days for x in diff_dates])
-    #print(diff_days)
-    #
-    #
-    #convert date to number of days passed
-    #reference date: 01-12-2025
+
     # year = all_dates[x]["day"]
 
-    # datetime.datetime(year,month,day)
-
-    # print(type(day))
-    # dates, prices = np.transpose(
-    #     np.loadtxt(
-    #         file,
-    #         delimiter=";",
-    #         skiprows=1,
-    #         converters=converters,
-    #     )
-    # )
-    # print(dates, prices)
     return diff_days, prices, dates
 
 def plot_data(file):
     diff_days, prices, raw_dates = get_data(file)
-    std.default.plt_pretty("Tage seit 01.01.2025","Gurkenpreis")
+    std.default.plt_pretty("days since 01-12-2025","unit price")
     plt.scatter(diff_days,prices)
     plt.show()
 
