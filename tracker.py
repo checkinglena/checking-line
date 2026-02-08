@@ -12,6 +12,11 @@ ref_date = datetime(1970,1,1)
 #     return date.strftime("%d-%m-%y")
 
 def get_data(file):
+    #assumes file name format "gurken_STORE.csv"
+    _, store = file.split("_")
+    store, _ = store.split(".")
+    store = store.capitalize()
+
     with open(file) as file:
         f = csv.DictReader(file, delimiter=";")
         dates = []
@@ -39,25 +44,33 @@ def get_data(file):
         diff = instance_date - ref_date
         diff_dates.append(diff)
 
-    return diff_dates, prices
+    return diff_dates, prices, store
 
-
-def plot_data(file):
-    diff_dates, prices = get_data(file)
+def plot_data(file, subplot):
+    diff_dates, prices, store = get_data(file)
     diff_days = ([x.days for x in diff_dates]) # list of timedelta objects, DO NOT attempt to work w diff_dates
     formatter = dates.DateFormatter('%d-%m-%Y')
 
+
     std.default.plt_pretty("date","unit price")
-    plt.scatter(diff_days,prices)
+    plt.subplot(1, 1, subplot)
+    plt.scatter(diff_days,prices, label=rf"{store}")
     plt.gca().xaxis.set_major_formatter(formatter)
-    if len(argv) > 2:
-        plt.savefig(argv[2])
+    plt.legend()
+
+def subfigs(file1,file2):
+
+    plot_data(file1,1)
+
+
+    if len(argv) > 3:
+        plt.savefig(argv[3])
     else:
         plt.show()
     return
 
 def main():
-    plot_data(argv[1])
+    subfigs(argv[1],argv[2])
     return
 
 
