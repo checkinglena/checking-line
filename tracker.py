@@ -7,6 +7,10 @@ from sys import argv
 
 ref_date = datetime(1970,1,1)
 
+# obsolete function but useful
+# def format_date(date):
+#     return date.strftime("%d-%m-%y")
+
 def get_data(file):
     with open(file) as file:
         f = csv.DictReader(file, delimiter=";")
@@ -16,16 +20,12 @@ def get_data(file):
         for row in f:
             dates.append(row["date"])
             prices.append(row["price"].strip())
-
     prices = list(map(float,prices))
-    # date parser
-    #all_dates = {}
-    #ref_date = datetime(2025,12,1)
+
+    # date parsing (version w/o dicts)
     diff_dates = []
-    instance_dates = []
     # assumes DD-MM-YYYY format for date input (possible separators: -, / or .)
     for x in range(len(dates)):
-
         if "-" in dates[x]:
             day,month,year = dates[x].split("-")
         elif "/" in dates[x]:
@@ -34,41 +34,27 @@ def get_data(file):
             day,month,year = dates[x].split(".")
         else:
             print("not a valid date format")
-        #dict_date = {"day":int(day),"month":int(month),"year":int(year)}
-        #all_dates.update({x: dict_date})
         instance_date = datetime(int(year),int(month),int(day))
         #convert date to number of days passed since reference date
         diff = instance_date - ref_date
-        instance_dates.append(instance_date)
         diff_dates.append(diff)
 
-    #diff_days = ([x.days for x in diff_dates])
-
-    # year = all_dates[x]["day"]
-
-
     return diff_dates, prices
-
-def format_date(date):
-    return date.strftime("%d-%m-%y")
-
 
 
 def plot_data(file):
     diff_dates, prices = get_data(file)
-    diff_days = ([x.days for x in diff_dates]) # list of timedelta objects
-
-    #formatted_inst_dates = list(map(format_date,inst_dates))
-    #xvals = lambda x: [map(format_date,inst_dates[day]) for day in range(len(x))]
-
+    diff_days = ([x.days for x in diff_dates]) # list of timedelta objects, DO NOT attempt to work w diff_dates
     formatter = dates.DateFormatter('%d-%m-%Y')
 
     std.default.plt_pretty("date","unit price")
     plt.scatter(diff_days,prices)
     plt.gca().xaxis.set_major_formatter(formatter)
-    plt.show()
-
-
+    if len(argv) > 2:
+        plt.savefig(argv[2])
+    else:
+        plt.show()
+    return
 
 def main():
     plot_data(argv[1])
