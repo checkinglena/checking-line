@@ -14,8 +14,7 @@ ref_date = datetime(1970,1,1)
 
 def get_data(file):
     #assumes file name format "PATH/gurken_STORE.csv" or "PATH/gurken.csv"
-    a = file.split("gurken")
-    store = a[-1]
+    store = file.split("gurken")[-1]
     try:
         _, store  = store.split("_")
         store, _ = store.split(".")
@@ -45,7 +44,7 @@ def get_data(file):
             year,month,day = dates[x].split("-")
         elif "/" in dates[x]:
             year,month,day = dates[x].split("/")
-        elif "." in dates[x]: #this is the case for the real file
+        elif "." in dates[x]:
             year,month,day = dates[x].split(".")
         else:
             print("not a valid date format")
@@ -53,7 +52,6 @@ def get_data(file):
         #convert date to number of days passed since reference date
         diff = instance_date - ref_date
         diff_dates.append(diff)
-
     return diff_dates, prices, store
 
 def calc_index(diff_dates,prices,ref="1.19"):
@@ -76,7 +74,7 @@ def plot_index(file,ref="1.19"):
     prices_indexed_sorted = [prices_indexed[x] for x in sorting_indices]
 
     formatter = dates.DateFormatter('%d-%m-%Y')
-    plt.plot(diff_days_sorted,prices_indexed_sorted, label=rf"{name} for {store}",linestyle="--",color="tab:green")
+    plt.plot(diff_days_sorted,prices_indexed_sorted, label=rf"{name} for {store}",linestyle="dotted",color="tab:green")
     plt.gca().xaxis.set_major_formatter(formatter)
     return
 
@@ -94,27 +92,29 @@ def plot_data(file, totalplots, subplot):
 
     formatter = dates.DateFormatter('%d-%m-%Y')
     std.default.plt_pretty("date","unit price")
-    plt.subplot(1, totalplots, subplot) #(1,1,1) for only one data file given, to fix
+    plt.subplot(1, totalplots, subplot) # (1,1,1) for only one data file given
     plt.scatter(diff_days_sorted,prices_sorted, label=rf"{store}",marker="x",color="tab:green")
 
     plt.gca().xaxis.set_major_formatter(formatter)
+    plt.gca().set_xticklabels("date",fontsize="small")
+    return
 
 
 # TO DO: display for multiple files in subfigures
+#
 # def subfigs(file1,file2):
-#     plot_data(file1,1,1)
-#     if len(sys.argv) > 3:
-#         plt.savefig(sys.argv[3])
-#     else:
-#         plt.show()
+#     plot_data(file1,2,1)
+#     plot_data(file2,2,2)
 #     return
 
 def main():
     plot_data(sys.argv[1], 1, 1)
     plot_index(sys.argv[1])
     plt.legend(loc="best",fontsize='small')
-    plt.show()
-
+    if len(sys.argv) > 3:
+        plt.savefig(sys.argv[2])
+    else:
+        plt.show()
     return
 
 
