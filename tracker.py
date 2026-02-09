@@ -1,9 +1,10 @@
+import numpy as np
 from matplotlib import dates
 from datetime import datetime
 from matplotlib import pyplot as plt
 import csv
 import std
-from sys import argv
+import sys
 
 ref_date = datetime(1970,1,1)
 
@@ -12,31 +13,40 @@ ref_date = datetime(1970,1,1)
 #     return date.strftime("%d-%m-%y")
 
 def get_data(file):
-    #assumes file name format "gurken_STORE.csv"
-    _, store = file.split("_")
-    store, _ = store.split(".")
-    store = store.capitalize()
+    #assumes file name format "PATH/gurken_STORE.csv" or "PATH/gurken.csv"
+    a = file.split("gurken")
+    store = a[-1]
+    try:
+        _, store  = store.split("_")
+        store, _ = store.split(".")
+        #store = store.capitalize()
+    except ValueError:
+        store = "unspecified"
 
-    with open(file) as file:
-        f = csv.DictReader(file, delimiter=";")
-        dates = []
-        prices = []
-        # assumes header row "date;price"
-        for row in f:
-            dates.append(row["date"])
-            prices.append(row["price"].strip())
+    try:
+        with open(file) as file:
+            f = csv.DictReader(file, delimiter=";")
+            dates = []
+            prices = []
+            # assumes header row "date;price"
+            for row in f:
+                dates.append(row["date"])
+                prices.append(row["price"].strip())
+    except FileNotFoundError:
+        sys.exit("cannot open file")
+
     prices = list(map(float,prices))
 
     # date parsing (version w/o dicts)
     diff_dates = []
-    # assumes DD-MM-YYYY format for date input (possible separators: -, / or .)
+    # assumes YYYY-MM-DD format for date input (possible separators: -, / or .)
     for x in range(len(dates)):
         if "-" in dates[x]:
-            day,month,year = dates[x].split("-")
+            year,month,day = dates[x].split("-")
         elif "/" in dates[x]:
-            day,month,year = dates[x].split("/")
-        elif "." in dates[x]:
-            day,month,year = dates[x].split(".")
+            year,month,day = dates[x].split("/")
+        elif "." in dates[x]: #this is the case for the real file
+            year,month,day = dates[x].split(".")
         else:
             print("not a valid date format")
         instance_date = datetime(int(year),int(month),int(day))
@@ -46,31 +56,65 @@ def get_data(file):
 
     return diff_dates, prices, store
 
-def plot_data(file, subplot):
+def calc_index(diff_dates,prices,ref="1.19"):
+    ref_price = float(ref) #arbitrarily set
+    index_prices =[]
+    for x in range(len(diff_dates)):
+        proportion = prices[x] / ref_price
+        index_prices.append(proportion)
+    name = rf"index (normalized to {ref})"
+    return diff_dates, index_prices, name
+
+def plot_index(file,ref="1.19"):
     diff_dates, prices, store = get_data(file)
-    diff_days = ([x.days for x in diff_dates]) # list of timedelta objects, DO NOT attempt to work w diff_dates
+    diff_days, prices_indexed, name = calc_index(diff_dates, prices,ref)
+    diff_days = ([x.days for x in diff_dates]) # list of timedelta objects
+
+    #sorting data
+    sorting_indices = np.argsort(diff_days)
+    diff_days_sorted = [diff_days[x] for x in sorting_indices]
+    prices_indexed_sorted = [prices_indexed[x] for x in sorting_indices]
+
     formatter = dates.DateFormatter('%d-%m-%Y')
-
-
-    std.default.plt_pretty("date","unit price")
-    plt.subplot(1, 1, subplot)
-    plt.scatter(diff_days,prices, label=rf"{store}")
+    plt.plot(diff_days_sorted,prices_indexed_sorted, label=rf"{name} for {store}",linestyle="--",color="tab:green")
     plt.gca().xaxis.set_major_formatter(formatter)
-    plt.legend()
-
-def subfigs(file1,file2):
-
-    plot_data(file1,1)
-
-
-    if len(argv) > 3:
-        plt.savefig(argv[3])
-    else:
-        plt.show()
     return
 
+
+
+def plot_data(file, totalplots, subplot):
+    diff_dates, prices, store = get_data(file)
+    diff_days = ([x.days for x in diff_dates]) # list of timedelta objects, DO NOT attempt to work w diff_dates
+
+    #sorting data
+    sorting_indices = np.argsort(diff_days)
+    diff_days_sorted = [diff_days[x] for x in sorting_indices]
+    diff_dates_sorted = [diff_dates[x] for x in sorting_indices]
+    prices_sorted = [prices[x] for x in sorting_indices]
+
+    formatter = dates.DateFormatter('%d-%m-%Y')
+    std.default.plt_pretty("date","unit price")
+    plt.subplot(1, totalplots, subplot) #(1,1,1) for only one data file given, to fix
+    plt.scatter(diff_days_sorted,prices_sorted, label=rf"{store}",marker="x",color="tab:green")
+
+    plt.gca().xaxis.set_major_formatter(formatter)
+
+
+# TO DO: display for multiple files in subfigures
+# def subfigs(file1,file2):
+#     plot_data(file1,1,1)
+#     if len(sys.argv) > 3:
+#         plt.savefig(sys.argv[3])
+#     else:
+#         plt.show()
+#     return
+
 def main():
-    subfigs(argv[1],argv[2])
+    plot_data(sys.argv[1], 1, 1)
+    plot_index(sys.argv[1])
+    plt.legend(loc="best",fontsize='small')
+    plt.show()
+
     return
 
 
