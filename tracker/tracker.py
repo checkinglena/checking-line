@@ -114,7 +114,7 @@ def plot_index(file,ref="1.19",colorcoded=False,index_colorcoded=False):
     xrange = np.linspace(min(diff_days_sorted),max(diff_days_sorted),1000)
 
     plt.plot(diff_days_sorted,prices_indexed_sorted, label=rf"index {name}",linestyle="dotted",color="tab:green")
-    plt.plot(xrange,fitted_poly(xrange),color="tab:green",label=f"polynomial fit (order={order})")
+    #plt.plot(xrange,fitted_poly(xrange),color="tab:green",label=f"polynomial fit (order={order})")
 
     #assigning & plotting seasonality
     if colorcoded == True:
@@ -123,7 +123,7 @@ def plot_index(file,ref="1.19",colorcoded=False,index_colorcoded=False):
         plt.scatter(diff_days,seasonality,color="tab:red",marker=".",label="in season")
     if index_colorcoded == True:
             seasonality_2 = is_seasonal(dates_sorted,prices_indexed_sorted,prices_indexed_sorted)
-            plt.scatter(diff_days,seasonality_2,marker=".",label="in season (index)",color="tab:red")
+            #plt.scatter(diff_days,seasonality_2,marker=".",label="in season (index)",color="tab:red")
 
     plt.gca().xaxis.set_major_formatter(formatter)
 
