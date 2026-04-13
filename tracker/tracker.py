@@ -3,6 +3,7 @@ from matplotlib import dates
 from datetime import datetime
 from matplotlib import pyplot as plt
 import matplotlib.colors
+from scipy.signal import savgol_filter
 import std
 import sys
 import csv
@@ -58,13 +59,20 @@ def get_data(file):
     return diff_dates, prices, store
 
 def calc_index(diff_dates,prices,ref="1.19"):
+    #not actually an index anymore, just relates current price to time average
     ref_price = float(ref) #arbitrarily set
     index_prices =[]
+    av_price = float(sum(prices))/len(prices)
     for x in range(len(diff_dates)):
-        proportion = prices[x] / ref_price
+        proportion = prices[x] / av_price
+        #comp_temp = prices[x] / ref_price # this would be the actual index function
         index_prices.append(proportion)
-    name = rf"(normalized to {ref})"
-    return diff_dates, index_prices, name
+    name = rf"(smoothed & normalized to average {round(av_price,2)})"
+
+    # smoothing using scipy.signal.savgol_filter (rolling average) with window size 7, 4th order polynomial
+    filtered_index_prices = savgol_filter(index_prices,8,4)
+
+    return diff_dates, filtered_index_prices, name, av_price
 
 def fit_polynomial(x,y, order):
     return np.polynomial.Polynomial.fit(x,y,deg=order,full=True)
@@ -90,7 +98,7 @@ def is_seasonal(dates,prices,indexed_prices):
 
 def plot_index(file,ref="1.19",colorcoded=False,index_colorcoded=False):
     diff_dates, prices, store = get_data(file)
-    diff_days, prices_indexed, name = calc_index(diff_dates, prices,ref)
+    diff_days, prices_indexed, name, av_price = calc_index(diff_dates, prices,ref)
     diff_days = ([x.days for x in diff_dates]) # list of timedelta objects
 
     #sorting data
@@ -113,7 +121,7 @@ def plot_index(file,ref="1.19",colorcoded=False,index_colorcoded=False):
     formatter = dates.DateFormatter('%d-%m-%Y')
     xrange = np.linspace(min(diff_days_sorted),max(diff_days_sorted),1000)
 
-    plt.plot(diff_days_sorted,prices_indexed_sorted, label=rf"index {name}",linestyle="dotted",color="tab:green")
+    plt.plot(diff_days_sorted,prices_indexed_sorted, label=rf"{name}",linestyle="dotted",color="tab:green")
     #plt.plot(xrange,fitted_poly(xrange),color="tab:green",label=f"polynomial fit (order={order})")
 
     #assigning & plotting seasonality
