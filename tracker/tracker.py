@@ -149,7 +149,7 @@ def plot_data(file, totalplots, subplot):
     prices_sorted = [prices[x] for x in sorting_indices]
 
     formatter = dates.DateFormatter('%d-%m-%Y')
-    std.default.plt_pretty("sample date","unit price")
+    #std.default.plt_pretty("sample date","unit price")
     plt.subplot(1, totalplots, subplot) # (1,1,1) for only one data file given
     plt.scatter(diff_days_sorted,prices_sorted, label=rf"{store}",marker="x",color="tab:green")
 
@@ -169,6 +169,7 @@ def main():
     plot_data(sys.argv[1], 1, 1)
     plot_index(sys.argv[1],colorcoded=True,index_colorcoded=True)
     plt.legend(loc="best",fontsize='small')
+    std.default.plt_pretty("sample date","unit price")
     if len(sys.argv) > 3:
         plt.savefig(sys.argv[2])
     else:
